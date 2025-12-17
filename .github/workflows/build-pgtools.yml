@@ -19,7 +19,7 @@ jobs:
           apt-get download postgresql-client-16
           dpkg -x postgresql-client-16*.deb ./pg16-linux
           ls -R ./pg16-linux
-          tar -czf pg16-linux-clean.tar.gz -C ./pg16-linux usr/bin usr/lib
+          tar -czf pg16-linux-clean.tar.gz -C ./pg16-linux/usr/lib/postgresql/16 bin lib
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
