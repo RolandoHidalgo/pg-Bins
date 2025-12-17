@@ -29,7 +29,7 @@ jobs:
         run: |
           curl -L -o pg16-win.zip https://get.enterprisedb.com/postgresql/postgresql-16.3-1-windows-x64-binaries.zip
           mkdir pg16-win
-          unzip pg16-win.zip -d pg16-win
+          unzip pg16-win.zip "bin/*" -d pg16-win
           # Empaquetar solo la carpeta bin
           tar -czf pg16-win-bin.tar.gz -C pg16-win bin
       - name: Upload artifact
