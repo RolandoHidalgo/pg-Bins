@@ -17,7 +17,7 @@ jobs:
           dpkg -x postgresql-client-16_16.3-1.pgdg+1_amd64.deb ./pg16-linux
           tar -czf pg16-linux.tar.gz -C ./pg16-linux usr/bin usr/lib
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pg16-linux
           path: pg16-linux.tar.gz
@@ -33,7 +33,7 @@ jobs:
           # Empaquetar solo la carpeta bin
           tar -czf pg16-win-bin.tar.gz -C pg16-win bin
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pg16-windows-bin
           path: pg16-win-bin.tar.gz
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v7
         with:
           path: ./dist
 
