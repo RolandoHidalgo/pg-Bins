@@ -13,9 +13,10 @@ jobs:
     steps:
       - name: Download PostgreSQL client 16 (Debian package)
         run: |
-          wget https://apt.postgresql.org/pub/repos/apt/pool/main/p/postgresql-16/postgresql-client-16_16.3-1.pgdg+1_amd64.deb
-          dpkg -x postgresql-client-16_16.3-1.pgdg+1_amd64.deb ./pg16-linux
-          tar -czf pg16-linux.tar.gz -C ./pg16-linux usr/bin usr/lib
+          sudo apt-get update
+          apt-get download postgresql-client-16
+          dpkg -x postgresql-client-16*.deb ./pg16-linux
+          tar -czf pg16-linux-clean.tar.gz -C ./pg16-linux usr/bin usr/lib
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
