@@ -1,0 +1,57 @@
+name: Build PostgreSQL Client Binaries
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+permissions:
+  contents: write   # 🔹 necesario para crear releases
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download PostgreSQL client 16 (Debian package)
+        run: |
+          wget https://apt.postgresql.org/pub/repos/apt/pool/main/p/postgresql-16/postgresql-client-16_16.3-1.pgdg+1_amd64.deb
+          dpkg -x postgresql-client-16_16.3-1.pgdg+1_amd64.deb ./pg16-linux
+          tar -czf pg16-linux.tar.gz -C ./pg16-linux usr/bin usr/lib
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: pg16-linux
+          path: pg16-linux.tar.gz
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Download PostgreSQL client 16 (Windows binaries)
+        run: |
+          curl -L -o pg16-win.zip https://get.enterprisedb.com/postgresql/postgresql-16.3-1-windows-x64-binaries.zip
+          mkdir pg16-win
+          tar -xf pg16-win.zip -C pg16-win
+          # Empaquetar solo la carpeta bin
+          tar -czf pg16-win-bin.tar.gz -C pg16-win bin
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: pg16-windows-bin
+          path: pg16-win-bin.tar.gz
+
+  release:
+    needs: [linux, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: ./dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/pg16-linux/pg16-linux.tar.gz
+            dist/pg16-windows/pg16-win.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
