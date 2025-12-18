@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        version: [10.0.1, 12.6.2, 16.3.1]
+        version: [10.23-1, 12.22-1, 16.3-1]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Build on Linux
