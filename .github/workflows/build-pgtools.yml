@@ -27,13 +27,13 @@ jobs:
           apt-get download libpq5
           dpkg -x libpq5*.deb ./pg$MAJOR-linux
           ls -R ./pg$MAJOR-linux
-          tar -czf pg$MAJOR-linux-clean.tar.gz -C . pg$MAJOR-linux
+          tar -czf pg-bin${{ matrix.version }}-linux.tar.gz -C . pg$MAJOR-linux
           
       - name: Upload artifact
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: pg${{ matrix.version }}-linux.tar.gz
+          name: pg-bin${{ matrix.version }}-linux.tar.gz
           path: .
 
       - name: Download PostgreSQL client 16 (Windows binaries)
@@ -43,13 +43,13 @@ jobs:
           mkdir pg${{ matrix.version }}-win
           unzip pg${{ matrix.version }}-win.zip "pgsql/bin/*" -d pg${{ matrix.version }}-win
           # Empaquetar solo la carpeta bin
-          tar -czf pg${{ matrix.version }}-win-bin.tar.gz -C pg${{ matrix.version }}-win/pgsql bin
+          tar -czf pg-bin${{ matrix.version }}-win.tar.gz -C pg${{ matrix.version }}-win/pgsql bin
           
       - name: Upload artifact
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: pg${{ matrix.version }}-win-bin.tar.gz
+          name: pg-bin${{ matrix.version }}-win.tar.gz
           path: .
 
   release:
@@ -62,7 +62,9 @@ jobs:
           path: ./dists
           merge-multiple: true
 
-      - name: ccc
-       
-        run: |          
-          ls -R ./dists
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./dists/pg-bin*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
