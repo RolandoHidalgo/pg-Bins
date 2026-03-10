@@ -13,10 +13,11 @@ jobs:
       matrix:
         os: [debian:stretch, windows-latest]
         version: [10.23-1, 12.22-1, 16.3-1]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    container: ${{ matrix.os }}
     steps:
       - name: Build on Debian Stretch
-        if: matrix.os == 'debian:stretch'
+        if: startsWith(matrix.os, 'debian')
         run: |
           MAJOR=$(echo "${{ matrix.version }}" | cut -d. -f1)
           echo "deb http://apt.postgresql.org/pub/repos/apt stretch-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
@@ -30,7 +31,7 @@ jobs:
           tar -czf pg-bin${{ matrix.version }}-linux.tar.gz -C . pg$MAJOR-linux
           
       - name: Upload artifact
-        if: matrix.os == 'ubuntu-latest'
+        if: startsWith(matrix.os, 'windows')
         uses: actions/upload-artifact@v4
         with:
           name: pg-bin${{ matrix.version }}-linux.tar.gz
