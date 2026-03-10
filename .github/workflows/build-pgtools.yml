@@ -36,7 +36,7 @@ jobs:
           
 
       - name: Cache artifact
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: pg-bin-release-${{ matrix.version }}-linux.tar.gz
           key: pg-bin-release-16.3-linux    
