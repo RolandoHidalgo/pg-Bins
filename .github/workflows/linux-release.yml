@@ -1,0 +1,71 @@
+name: Build PostgreSQL Client Static Binaries
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "lv*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux-static:
+    runs-on: ubuntu-latest
+    container: debian:stretch
+    strategy:
+      matrix:
+        version: [16.3]
+    steps:
+      - name: Prepare build environment
+        run: |
+          echo "deb http://archive.debian.org/debian stretch main contrib non-free" > /etc/apt/sources.list
+          echo "deb http://archive.debian.org/debian-security stretch/updates main contrib non-free" >> /etc/apt/sources.list
+          apt-get -o Acquire::Check-Valid-Until=false update
+          apt-get install -y build-essential wget curl libreadline-dev zlib1g-dev flex bison libicu-dev \
+                             libssl-dev jq
+
+      - name: Download PostgreSQL source
+        run: |
+          wget https://ftp.postgresql.org/pub/source/v${{ matrix.version }}/postgresql-${{ matrix.version }}.tar.gz
+          tar -xzf postgresql-${{ matrix.version }}.tar.gz
+
+      - name: Build static client binaries
+        run: |
+          cd postgresql-${{ matrix.version }}
+          ./configure --prefix=/pg-client-${{ matrix.version }} \
+                      --without-server \
+                      --disable-shared \
+                      --without-icu \
+                      LDFLAGS="-static"
+          make -j$(nproc) all
+          make install
+          cd ..
+          tar -czf pg-client-${{ matrix.version }}-linux-static.tar.gz -C / pg-client-${{ matrix.version }}
+
+      - name: Upload to GitHub Release via API
+        run: |
+          FILE="pg-client-${{ matrix.version }}-linux-static.tar.gz"
+          TAG="v${{ matrix.version }}"
+
+          # Obtener release ID (crea release si no existe)
+          RELEASE_ID=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/releases/tags/${TAG} \
+            | jq -r .id)
+
+          if [ "$RELEASE_ID" = "null" ]; then
+            RELEASE_ID=$(curl -s -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"tag_name\":\"${TAG}\",\"name\":\"Release ${TAG}\"}" \
+              https://api.github.com/repos/${{ github.repository }}/releases \
+              | jq -r .id)
+          fi
+
+          # Subir asset
+          curl -s -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/gzip" \
+            --data-binary @"$FILE" \
+            "https://uploads.github.com/repos/${{ github.repository }}/releases/${RELEASE_ID}/assets?name=${FILE}"
