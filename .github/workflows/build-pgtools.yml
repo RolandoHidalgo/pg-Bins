@@ -13,7 +13,7 @@ jobs:
     container: debian:stretch
     strategy:
       matrix:
-        version: [16.3-1]
+        version: [16.3]
     steps:
       - name: Build on Debian Stretch        
         run: |
@@ -21,17 +21,16 @@ jobs:
           echo "deb http://snapshot.debian.org/archive/debian/20210701T000000Z stretch main" > /etc/apt/sources.list
           echo "deb http://snapshot.debian.org/archive/debian-security/20210701T000000Z stretch/updates main" >> /etc/apt/sources.list
           apt-get -o Acquire::Check-Valid-Until=false update
-          echo "deb http://snapshot.debian.org/archive/apt.postgresql.org/20210701T000000Z stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list
-          apt-get -o Acquire::Check-Valid-Until=false update
-          apt-get install -y wget gnupg apt-transport-https
-          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-          apt-get -o Acquire::Check-Valid-Until=false update
-          apt-get download postgresql-client-$MAJOR
-          dpkg -x postgresql-client-$MAJOR*.deb ./pg$MAJOR-linux
-          apt-get download libpq5
-          dpkg -x libpq5*.deb ./pg$MAJOR-linux
-          ls -R ./pg$MAJOR-linux
-          tar -czf pg-bin${{ matrix.version }}-linux.tar.gz -C . pg$MAJOR-linux
+          apt-get install -y build-essential wget curl libreadline-dev zlib1g-dev flex bison
+          wget https://ftp.postgresql.org/pub/source/v${{ matrix.version }}/postgresql-${{ matrix.version }}.tar.gz
+          tar -xzf postgresql-${{ matrix.version }}.tar.gz
+          cd postgresql-${{ matrix.version }}
+          ./configure --prefix=/pg${{ matrix.version }}-linux
+          make -j$(nproc)
+          make install
+          cd ..
+          tar -czf pg-bin${{ matrix.version }}-linux.tar.gz -C / pg${{ matrix.version }}-linux
+          
           
       - name: Upload artifact (Linux)        
         uses: actions/upload-artifact@v4
