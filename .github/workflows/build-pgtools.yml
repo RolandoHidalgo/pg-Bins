@@ -18,10 +18,10 @@ jobs:
       - name: Build on Debian Stretch        
         run: |
           MAJOR=$(echo "${{ matrix.version }}" | cut -d. -f1)
-          echo "deb http://archive.debian.org/debian stretch main contrib non-free" > /etc/apt/sources.list
-          echo "deb http://archive.debian.org/debian-security stretch/updates main contrib non-free" >> /etc/apt/sources.list
+          echo "deb http://snapshot.debian.org/archive/debian/20210701T000000Z stretch main" > /etc/apt/sources.list
+          echo "deb http://snapshot.debian.org/archive/debian-security/20210701T000000Z stretch/updates main" >> /etc/apt/sources.list
           apt-get -o Acquire::Check-Valid-Until=false update
-          echo "deb http://archive.debian.org/debian stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+          echo "deb http://snapshot.debian.org/archive/apt.postgresql.org/20210701T000000Z stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list
           apt-get -o Acquire::Check-Valid-Until=false update
           apt-get install -y wget gnupg apt-transport-https
           wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
