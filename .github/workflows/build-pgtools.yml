@@ -32,7 +32,8 @@ jobs:
           make install
           cd ..
           tar -czf pg-bin${{ matrix.version }}-linux.tar.gz -C / pg${{ matrix.version }}-linux
-          mv pg-bin${{ matrix.version }}-linux.tar.gz $GITHUB_WORKSPACE/pg-bin-release-${{ matrix.version }}-linux.tar.gz 
+          mv pg-bin${{ matrix.version }}-linux.tar.gz $GITHUB_WORKSPACE/pg-bin-release-${{ matrix.version }}-linux.tar.gz
+          
 
       - name: Cache artifact
         uses: actions/cache@v4
