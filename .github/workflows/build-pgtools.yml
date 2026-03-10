@@ -18,11 +18,14 @@ jobs:
       - name: Build on Debian Stretch        
         run: |
           MAJOR=$(echo "${{ matrix.version }}" | cut -d. -f1)
-          echo "deb http://apt.postgresql.org/pub/repos/apt stretch-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list
-          apt-get update
+          echo "deb http://archive.debian.org/debian stretch main contrib non-free" > /etc/apt/sources.list
+          echo "deb http://archive.debian.org/debian-security stretch/updates main contrib non-free" >> /etc/apt/sources.list
+          apt-get -o Acquire::Check-Valid-Until=false update
+          echo "deb http://archive.debian.org/debian stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+          apt-get -o Acquire::Check-Valid-Until=false update
           apt-get install -y wget gnupg apt-transport-https
           wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-          apt-get update
+          apt-get -o Acquire::Check-Valid-Until=false update
           apt-get download postgresql-client-$MAJOR
           dpkg -x postgresql-client-$MAJOR*.deb ./pg$MAJOR-linux
           apt-get download libpq5
