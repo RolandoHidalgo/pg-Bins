@@ -22,38 +22,43 @@ jobs:
           echo "deb http://archive.debian.org/debian stretch main contrib non-free" > /etc/apt/sources.list
           echo "deb http://archive.debian.org/debian-security stretch/updates main contrib non-free" >> /etc/apt/sources.list
           apt-get -o Acquire::Check-Valid-Until=false update
-          apt-get install -y build-essential wget curl libreadline-dev zlib1g-dev flex bison libicu-dev \
-                             libssl-dev jq
+          apt-get install -y build-essential wget curl libreadline-dev zlib1g-dev flex bison libicu-dev libssl-dev
 
       - name: Download PostgreSQL source
         run: |
-          wget https://ftp.postgresql.org/pub/source/v${{ matrix.version }}/postgresql-${{ matrix.version }}.tar.gz
-          tar -xzf postgresql-${{ matrix.version }}.tar.gz
+          VERSION=16.3
+          wget https://ftp.postgresql.org/pub/source/v${VERSION}/postgresql-${VERSION}.tar.gz
+          tar -xzf postgresql-${VERSION}.tar.gz
 
-      - name: Build static client binaries
+      - name: Build client
         run: |
-          cd postgresql-${{ matrix.version }}
-          ./configure --prefix=/pg-client-${{ matrix.version }} \
-                      --without-server \
-                      --disable-shared \
-                      --without-icu \
-                      LDFLAGS="-static"
+          VERSION=16.3
+          cd postgresql-${VERSION}
+          ./configure --prefix=/pg-client-${VERSION} --without-server
           make -j$(nproc) all
           make install
           cd ..
-          tar -czf pg-client-${{ matrix.version }}-linux-static.tar.gz -C / pg-client-${{ matrix.version }}
 
-      - name: Upload to GitHub Release via API
+      - name: Bundle libs
         run: |
-          FILE="pg-client-${{ matrix.version }}-linux-static.tar.gz"
-          TAG="v${{ matrix.version }}"
+          VERSION=16.3
+          mkdir -p bundle/bin bundle/lib
+          cp -r /pg-client-${VERSION}/bin bundle/
+          # Detect libs needed by psql y pg_dump
+          for bin in /pg-client-${VERSION}/bin/*; do
+            ldd $bin | awk '/=>/ {print $3}' | grep -v '^$' | xargs -I{} cp -u {} bundle/lib/
+          done
+          tar -czf pg-client-${VERSION}-bundle.tar.gz bundle
 
-          # Obtener release ID (crea release si no existe)
+      - name: Upload to Release
+        run: |
+          FILE="pg-client-16.3-bundle.tar.gz"
+          TAG="v16.3"
+          apt-get install -y jq
           RELEASE_ID=$(curl -s \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }}/releases/tags/${TAG} \
             | jq -r .id)
-
           if [ "$RELEASE_ID" = "null" ]; then
             RELEASE_ID=$(curl -s -X POST \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
@@ -62,8 +67,6 @@ jobs:
               https://api.github.com/repos/${{ github.repository }}/releases \
               | jq -r .id)
           fi
-
-          # Subir asset
           curl -s -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Content-Type: application/gzip" \
