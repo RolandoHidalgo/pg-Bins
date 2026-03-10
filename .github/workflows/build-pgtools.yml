@@ -32,7 +32,7 @@ jobs:
           make install
           cd ..
            tar -czf pg-bin${{ matrix.version }}-linux.tar.gz -C / pg${{ matrix.version }}-linux
-          mv pg-bin${{ matrix.version }}-linux.tar.gz $GITHUB_WORKSPACE/
+          
           
 
   upload-linux:
