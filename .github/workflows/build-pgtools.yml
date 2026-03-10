@@ -31,8 +31,8 @@ jobs:
           make -j$(nproc)
           make install
           cd ..
-           tar -czf pg-bin${{ matrix.version }}-linux.tar.gz -C / pg${{ matrix.version }}-linux
-          
+          tar -czf pg-bin${{ matrix.version }}-linux.tar.gz -C / pg${{ matrix.version }}-linux
+          mv pg-bin${{ matrix.version }}-linux.tar.gz $GITHUB_WORKSPACE/pg-bin-release-${{ matrix.version }}-linux.tar.gz
           
 
   upload-linux:
@@ -42,8 +42,8 @@ jobs:
       - name: Upload artifact (Linux)
         uses: actions/upload-artifact@v4
         with:
-          name: pg-bin16.3-linux.tar.gz
-          path: pg-bin16.3-linux.tar.gz        
+          name: pg-bin-release-16.3-linux.tar.gz
+          path: pg-bin-release-16.3-linux.tar.gz        
   build-windows:
     runs-on: windows-latest
     strategy:
