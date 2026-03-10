@@ -32,8 +32,25 @@ jobs:
           make install
           cd ..
           tar -czf pg-bin${{ matrix.version }}-linux.tar.gz -C / pg${{ matrix.version }}-linux
-          mv pg-bin${{ matrix.version }}-linux.tar.gz $GITHUB_WORKSPACE/pg-bin-release-${{ matrix.version }}-linux.tar.gz          
+          mv pg-bin${{ matrix.version }}-linux.tar.gz $GITHUB_WORKSPACE/pg-bin-release-${{ matrix.version }}-linux.tar.gz 
 
+      - name: Cache artifact
+        uses: actions/cache@v4
+        with:
+          path: pg-bin-release-${{ matrix.version }}-linux.tar.gz
+          key: pg-bin-release-16.3-linux    
+upload-linux:
+    needs: build-linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore artifact from cache
+        uses: actions/cache@v4
+        with:
+          path: pg-bin-release-16.3-linux.tar.gz
+          key: pg-bin-release-16.3-linux
+
+      - name: List files
+        run: ls -lh
       - name: Upload artifact (Linux)
         uses: actions/upload-artifact@v4
         with:
