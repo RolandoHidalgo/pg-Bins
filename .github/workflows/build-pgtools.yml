@@ -40,7 +40,7 @@ jobs:
         with:
           path: pg-bin-release-${{ matrix.version }}-linux.tar.gz
           key: pg-bin-release-16.3-linux    
-upload-linux:
+  upload-linux:
     needs: build-linux
     runs-on: ubuntu-latest
     steps:
