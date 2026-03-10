@@ -34,7 +34,7 @@ jobs:
         run: |
           VERSION=16.3
           cd postgresql-${VERSION}
-          ./configure --prefix=/pg-client-${VERSION} --without-server
+          ./configure --prefix=/pg-client-${VERSION} --without-server --without-icu
           make -j$(nproc) all
           make install
           cd ..
