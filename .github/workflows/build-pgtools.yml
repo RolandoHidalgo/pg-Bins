@@ -15,7 +15,8 @@ jobs:
       matrix:
         version: [16.3]
     steps:
-      - name: Build on Debian Stretch        
+      - name: Build on Debian Stretch
+
         run: |
           MAJOR=$(echo "${{ matrix.version }}" | cut -d. -f1)
           echo "deb http://archive.debian.org/debian stretch main contrib non-free" > /etc/apt/sources.list
@@ -31,13 +32,18 @@ jobs:
           make install
           cd ..
           tar -czf pg-bin${{ matrix.version }}-linux.tar.gz -C / pg${{ matrix.version }}-linux
+          cp pg-bin${{ matrix.version }}-linux.tar.gz /__w/${{ github.repository }}/artifact/
           
-          
-      - name: Upload artifact (Linux)        
+
+  upload-linux:
+    needs: build-linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Upload artifact (Linux)
         uses: actions/upload-artifact@v4
         with:
-          name: pg-bin${{ matrix.version }}-linux.tar.gz
-          path: .
+          name: pg-bin-linux
+          path: artifact/pg-bin*-linux.tar.gz        
   build-windows:
     runs-on: windows-latest
     strategy:
