@@ -5,7 +5,8 @@ on:
   push:
     tags:
       - "lv*"
-
+permissions:
+  contents: write
 jobs:
   build-linux-bundle:
     runs-on: ubuntu-latest
