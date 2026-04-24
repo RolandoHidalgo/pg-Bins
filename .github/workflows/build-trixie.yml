@@ -1,0 +1,49 @@
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "lv*"
+
+permissions:
+  contents: write
+jobs:
+  build-linux-bundle:
+    runs-on: ubuntu-latest
+    container: debian:trixie
+    strategy:
+      matrix:
+        version: [16.3]
+    steps:
+      - name: Prepare build environment
+        run: |
+          apt-get update
+          apt-get install -y build-essential wget curl libreadline-dev zlib1g-dev flex bison libicu-dev libssl-dev
+
+      - name: Download PostgreSQL source
+        run: |
+          VERSION=16.3
+          wget https://ftp.postgresql.org/pub/source/v${VERSION}/postgresql-${VERSION}.tar.gz
+          tar -xzf postgresql-${VERSION}.tar.gz
+
+      - name: Build client
+        run: |
+          VERSION=16.3
+          cd postgresql-${VERSION}
+          ./configure --prefix=/pg-client-${VERSION} --without-server --without-icu \
+            LDFLAGS="-Wl,-rpath,'$ORIGIN/../lib'"
+          make -j$(nproc) all
+          make install
+          cd ..
+
+      - name: Bundle libs
+        run: |
+          VERSION=16.3
+          mkdir -p bundle/bin bundle/lib
+          cp -r /pg-client-${VERSION}/bin bundle/
+          # Copiar solo dependencias necesarias, no glibc
+          for bin in /pg-client-${VERSION}/bin/*; do
+            ldd $bin | awk '/=>/ {print $3}' | grep -v '^$' | \
+              grep -v "libc.so" | grep -v "ld-linux" | \
+              xargs -I{} cp -u {} bundle/lib/
+          done
+          tar -czf pg-client-${VERSION}-bundle.tar.gz bundle
