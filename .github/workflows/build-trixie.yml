@@ -1,11 +1,11 @@
+name: Build PostgreSQL Client Static Binaries for trixie
+
 on:
   workflow_dispatch:
   push:
     tags:
       - "lv*"
 
-permissions:
-  contents: write
 jobs:
   build-linux-bundle:
     runs-on: ubuntu-latest
@@ -46,4 +46,27 @@ jobs:
               grep -v "libc.so" | grep -v "ld-linux" | \
               xargs -I{} cp -u {} bundle/lib/
           done
-          tar -czf pg-client-${VERSION}-bundle.tar.gz bundle
+          tar -czf pg-client-${VERSION}-bundle-trixie.tar.gz bundle
+
+      - name: Upload to Release
+        run: |
+          FILE="pg-client-16.3-bundle-trixie.tar.gz"
+          TAG="v16.3"
+          apt-get install -y jq
+          RELEASE_ID=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/releases/tags/${TAG} \
+            | jq -r .id)
+          if [ "$RELEASE_ID" = "null" ]; then
+            RELEASE_ID=$(curl -s -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"tag_name\":\"${TAG}\",\"name\":\"Release ${TAG}\"}" \
+              https://api.github.com/repos/${{ github.repository }}/releases \
+              | jq -r .id)
+          fi
+          curl -s -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/gzip" \
+            --data-binary @"$FILE" \
+            "https://uploads.github.com/repos/${{ github.repository }}/releases/${RELEASE_ID}/assets?name=${FILE}"
