@@ -31,7 +31,7 @@ jobs:
           VERSION=16.3
           cd postgresql-${VERSION}
           ./configure --prefix=/pg-client-${VERSION} --without-server --without-icu \
-            LDFLAGS="-Wl,-rpath,'$ORIGIN/../lib'"
+            LDFLAGS="-Wl,-rpath,'\$ORIGIN/../lib'"
           make -j$(nproc) all
           make install
           cd ..
