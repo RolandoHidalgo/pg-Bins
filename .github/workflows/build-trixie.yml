@@ -18,7 +18,8 @@ jobs:
       - name: Prepare build environment
         run: |
           apt-get update
-          apt-get install -y build-essential wget curl libreadline-dev zlib1g-dev flex bison libicu-dev libssl-dev
+          apt-get install -y build-essential wget curl libreadline-dev zlib1g-dev flex bison libicu-dev libssl-dev patchelf
+          
 
       - name: Download PostgreSQL source
         run: |
@@ -30,12 +31,17 @@ jobs:
         run: |
           VERSION=16.3
           cd postgresql-${VERSION}
-          ./configure --prefix=/pg-client-${VERSION} --without-server --without-icu \
-            LDFLAGS="-Wl,-rpath,'\\\$$ORIGIN/../lib'"
+          ./configure --prefix=/pg-client-${VERSION} --without-server --without-icu --disable-rpath 
           make -j$(nproc) all
           make install
           cd ..
-
+          
+      - name: Set RUNPATH
+        run: |
+          VERSION=16.3
+          for bin in /pg-client-${VERSION}/bin/*; do
+            patchelf --set-rpath '$ORIGIN/../lib' "$bin"
+          done
       - name: Bundle libs
         run: |
           VERSION=16.3
